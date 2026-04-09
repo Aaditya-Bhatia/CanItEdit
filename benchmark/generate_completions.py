@@ -274,7 +274,10 @@ class ChatAdaptorEditModel(EditModel):
             **kwargs,
         )
         gen = response.choices[0].message.content
-        return extract_code_from_markdown(prompt["content"], gen)
+        code = extract_code_from_markdown(gen)
+        if code is not None:
+            return code
+        return gen
 
 
 async def process_example_and_instruction(
@@ -284,35 +287,26 @@ async def process_example_and_instruction(
     model_kwargs: dict,
     args,
     output_dir: Path,
-    batch_sema: asyncio.Semaphore,
+    request_sema: asyncio.Semaphore,
     pbar: tqdm,
 ) -> None:
     """
     Process a single example and instruction kind by generating completions and saving results.
-
-    Args:
-        ex: The dataset example containing the code and instructions
-        instr_kind: The type of instruction to use ('instruction_descriptive' or 'instruction_lazy')
-        model: The model to use for generating completions
-        model_kwargs: Additional keyword arguments for model generation
-        args: Command line arguments
-        output_dir: Directory to save the results
-        batch_sema: Semaphore to limit the number of concurrent tasks
+    Uses a request-level semaphore so that a fixed number of requests are always
+    in-flight, keeping the GPU saturated even when some requests finish early.
     """
     # TODO(arjun): Not real resume. :)
     path = output_dir / f"{ex['full_name']}_{instr_kind}.json.gz"
     if path.exists():
+        pbar.update(1)
         return  # this pretty much resumes from where it left off
 
     example = EditCommand(instruction=ex[instr_kind], content=ex["before"])
 
     async def gen(example):
-        """
-        Issues a request, but concurrency limited by batch_sema.
-        """
-        async with batch_sema:
+        async with request_sema:
             try:
-                async with asyncio.timeout(30):
+                async with asyncio.timeout(600):
                     return await model.generate(example, **model_kwargs)
             except asyncio.TimeoutError:
                 return "<timeout encountered>"
@@ -368,7 +362,10 @@ async def main(args):
     instr_kinds = ["instruction_descriptive", "instruction_lazy"]
     items = list(itertools.product(dataset, instr_kinds))
 
-    batch_sema = asyncio.Semaphore(args.batch_size)
+    # Request-level concurrency: keep exactly batch_size requests in-flight
+    # at all times. As individual requests complete, new ones immediately
+    # fill the slot — no waiting for an entire item's completions to finish.
+    request_sema = asyncio.Semaphore(args.batch_size)
 
     pbar = tqdm(total=len(items))
 
@@ -382,7 +379,7 @@ async def main(args):
                     model_kwargs,
                     args,
                     Path(args.output_dir),
-                    batch_sema=batch_sema,
+                    request_sema=request_sema,
                     pbar=pbar,
                 )
             )
