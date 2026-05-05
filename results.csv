@@ -1,0 +1,14 @@
+Model,Type,Baseline,LLM-Cleaning,Static-Cleaning,Unfiltered,Not Generated,Gen. Not Eval'd
+DeepSeek-Coder-6.7B,base,-,-,-,-,,Unfiltered
+Llama-3.2-3B,base,-,-,-,-,,
+Qwen2.5-3B,base,-,-,-,-,,
+Qwen2.5-Coder-14B-Instruct,instruct,-,-,-,-,,
+Qwen2.5-Coder-3B-Instruct,instruct,-,-,-,-,,
+Qwen2.5-Coder-7B,base,-,-,-,-,,
+Qwen2.5-Coder-7B-Instruct,instruct,-,-,-,-,,
+Qwen3-14B,base,-,-,-,-,,Unfiltered
+Qwen3-4B,base,-,-,-,-,,
+Qwen3-8B,base,-,-,-,-,,
+StarCoder2-15B,base,-,-,-,-,,
+StarCoder2-3B,base,-,-,-,-,,
+StarCoder2-7B,base,-,-,-,-,,

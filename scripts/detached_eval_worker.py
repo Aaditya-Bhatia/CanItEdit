@@ -5,11 +5,18 @@ import errno
 import fcntl
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+MASTER_ROOT = Path("/shared_workspace_mfs/aadi/Projects/Master_VLLM")
+if str(MASTER_ROOT) not in sys.path:
+    sys.path.append(str(MASTER_ROOT))
+
+from benchmark_results import summarize_canitedit_run
 
 
 def parse_args():
@@ -66,9 +73,53 @@ def send_telegram(notify_script: str, message: str):
     subprocess.run([sys.executable, str(path), message], check=False)
 
 
+def format_percent(value: object) -> str | None:
+    if isinstance(value, (int, float)):
+        return f"{float(value):.2f}%"
+    return None
+
+
+def benchmark_message(model_name: str, state: str, score: str | None = None) -> str:
+    parts = ["CanItEdit", model_name, state]
+    if score:
+        parts.append(score)
+    return " | ".join(parts)
+
+
 def run(cmd: list[str], cwd: Path):
     print("$", " ".join(cmd), flush=True)
     subprocess.run(cmd, cwd=str(cwd), check=True)
+
+
+def prepare_eval_input_dir(run_dir: Path) -> Path:
+    """Expose only raw generation files to the Docker evaluator.
+
+    The upstream CanItEdit container walks every JSON-ish artifact under
+    ``--dir``. Once we started writing ``summary.json`` into ``run_dir``, the
+    container began trying to evaluate that file too and crashed with
+    ``KeyError: 'completions'``. Stage only the raw ``*.json.gz`` inputs in a
+    dedicated subdirectory and point Docker there.
+    """
+    eval_input_dir = run_dir / "_eval_input"
+    if eval_input_dir.exists():
+        shutil.rmtree(eval_input_dir)
+    eval_input_dir.mkdir(parents=True, exist_ok=True)
+
+    raw_files = sorted(
+        path
+        for path in run_dir.glob("*.json.gz")
+        if not path.name.endswith(".results.json.gz")
+    )
+    if not raw_files:
+        raise FileNotFoundError(f"no raw CanItEdit generation files found in {run_dir}")
+
+    for source in raw_files:
+        target = eval_input_dir / source.name
+        # Relative symlinks keep the staging step cheap even for hundreds of
+        # files and still work because the symlink target stays inside the
+        # mounted run directory.
+        target.symlink_to(Path("..") / source.name)
+    return eval_input_dir
 
 
 def main():
@@ -78,12 +129,16 @@ def main():
     repo_root = Path(__file__).resolve().parents[1]
 
     try:
+        model_name = run_dir.name.split("-canitedit-", 1)[0]
         update_summary(
             summary_path,
             status="eval_running",
             eval_started_at_utc=datetime.now(timezone.utc).isoformat(),
             detached_worker_pid=os.getpid(),
+            error=None,
+            eval_failed_at_utc=None,
         )
+        eval_input_dir = prepare_eval_input_dir(run_dir)
         run(
             [
                 "docker",
@@ -93,7 +148,7 @@ def main():
                 f"{run_dir}:/results:rw",
                 "ghcr.io/nuprl/canitedit",
                 "--dir",
-                "/results",
+                f"/results/{eval_input_dir.name}",
                 "--output-dir",
                 "/results",
             ],
@@ -106,8 +161,13 @@ def main():
             status="eval_complete",
             result_file_count=result_count,
             eval_completed_at_utc=datetime.now(timezone.utc).isoformat(),
+            error=None,
         )
-        send_telegram(args.notify_script, f"CanItEdit eval done. run_dir={run_dir}")
+        summary = summarize_canitedit_run(run_dir)
+        send_telegram(
+            args.notify_script,
+            benchmark_message(model_name, "done", format_percent((summary or {}).get("pass_at_1"))),
+        )
     except Exception as exc:
         update_summary(
             summary_path,
@@ -115,7 +175,7 @@ def main():
             error=str(exc),
             eval_failed_at_utc=datetime.now(timezone.utc).isoformat(),
         )
-        send_telegram(args.notify_script, f"CanItEdit eval failed. run_dir={run_dir} error={exc}")
+        send_telegram(args.notify_script, benchmark_message(model_name, "failed"))
         raise
 
 

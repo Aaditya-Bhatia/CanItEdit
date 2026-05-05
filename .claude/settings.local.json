@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "mcp__*",
+      "WebSearch",
+      "WebFetch(domain:*)",
+      "Bash(*)",
+      "Bash(ssh:*)",
+      "Bash(bash:*)",
+      "Bash(wc:*)",
+      "Bash(du:*)",
+      "Bash(git submodule:*)",
+      "Bash(ls:*)",
+      "Bash(conda env:*)",
+      "Bash(source /shared_workspace_mfs/aadi/common.bashrc)",
+      "Bash(conda create:*)",
+      "Bash(conda activate:*)",
+      "Bash(pip install:*)",
+      "Bash(docker info:*)",
+      "Bash(newgrp docker:*)",
+      "Bash(conda tos:*)",
+      "Bash(chmod:*)",
+      "Bash(python /shared_workspace_mfs/aadi/Projects/CanItEdit/benchmark/generate_completions.py --help)",
+      "Bash(python /shared_workspace_mfs/aadi/Projects/CanItEdit/benchmark/pass_k.py --help)",
+      "Bash(/shared_workspace_mfs/aadi/Projects/CanItEdit/run_benchmark.sh --help)",
+      "Bash(./run_benchmark.sh --model openai/deepseek-r1-qwen3-8b-lora --model-type chat --base-url http://localhost:8787/v1 --generate-only)",
+      "Bash(curl:*)",
+      "Bash(./run_benchmark.sh --model openai/editbench_adapter --model-type chat --run-name deepseek-r1-qwen3-8b-lora-2026-03-19 --base-url http://localhost:8787/v1 --generate-only)"
+    ]
+  }
+}

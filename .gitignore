@@ -1,0 +1,6 @@
+runs/
+logs/
+__pycache__/
+*.pyc
+.vscode/
+hf_runs/
