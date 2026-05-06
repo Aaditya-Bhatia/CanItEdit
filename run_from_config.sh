@@ -9,8 +9,9 @@
 set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="/shared_workspace_mfs/aadi/Projects/EditBench_fork/configs"
-NOTIFY_SCRIPT="/shared_workspace_mfs/aadi/Projects/notify_telegram.py"
+PROJECTS_ROOT="${PROJECTS_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+CONFIG_DIR="${CANITEDIT_CONFIG_DIR:-$PROJECTS_ROOT/Master-Benchmarking-Orchestrator/runtime}"
+NOTIFY_SCRIPT="${NOTIFY_TELEGRAM:-$PROJECTS_ROOT/notify_telegram.py}"
 
 if [[ $# -lt 1 ]]; then
     cat <<EOF
@@ -49,7 +50,12 @@ fi
 
 # Activate conda for pyyaml. Hard-fail if neither env is available so we do
 # not silently run under whatever interpreter happens to be on PATH.
-eval "$(/shared_workspace_mfs/aadi/miniconda3/bin/conda shell.bash hook)"
+_conda_bin="${CONDA_EXE:-$(command -v conda 2>/dev/null || echo "$HOME/miniconda3/bin/conda")}"
+if [[ -x "$_conda_bin" ]]; then
+    eval "$("$_conda_bin" shell.bash hook)"
+else
+    echo "Error: conda not found" >&2; exit 1
+fi
 if ! conda activate canitedit 2>/dev/null; then
     if ! conda activate SFT_env 2>/dev/null; then
         echo "Error: neither 'canitedit' nor 'SFT_env' conda env is available" >&2

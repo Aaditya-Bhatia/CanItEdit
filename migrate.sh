@@ -18,8 +18,8 @@ echo ""
 # ---- Conda env ----
 if command -v conda &>/dev/null; then
     echo ">>> conda found."
-elif [ -d "/shared_workspace_mfs/aadi/miniconda3" ]; then
-    eval "$(/shared_workspace_mfs/aadi/miniconda3/bin/conda shell.bash hook)"
+elif [ -d "$HOME/miniconda3" ]; then
+    eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)"
 else
     echo ">>> Installing Miniconda locally..."
     wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
@@ -40,8 +40,8 @@ conda activate canitedit
 echo ">>> Installing Python dependencies..."
 pip install --quiet -e "$REPO_DIR"
 
-# Also install pyyaml (needed by run_from_config.sh's inline python)
-pip install --quiet pyyaml
+# Also install pyyaml and litellm (needed by run_from_config.sh and generate_completions.py)
+pip install --quiet pyyaml litellm
 
 # ---- Docker eval image ----
 if command -v docker &>/dev/null; then

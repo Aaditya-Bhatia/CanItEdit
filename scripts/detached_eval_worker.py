@@ -12,7 +12,14 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-MASTER_ROOT = Path("/shared_workspace_mfs/aadi/Projects/Master_VLLM")
+def _find_master_root() -> Path:
+    projects = Path(__file__).resolve().parent.parent.parent
+    for name in ("Master_VLLM", "Master-Benchmarking-Orchestrator"):
+        candidate = projects / name
+        if candidate.is_dir():
+            return candidate
+    return projects / "Master_VLLM"
+MASTER_ROOT = Path(os.environ.get("MASTER_ROOT", str(_find_master_root())))
 if str(MASTER_ROOT) not in sys.path:
     sys.path.append(str(MASTER_ROOT))
 
