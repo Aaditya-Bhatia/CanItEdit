@@ -1,6 +1,9 @@
-runs/
 logs/
 __pycache__/
 *.pyc
 .vscode/
 hf_runs/
+
+# Keep generation outputs in runs/ committable for remote eval workflow.
+# Ignore only Docker-produced eval artifacts.
+runs/**/summary.json

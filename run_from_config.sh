@@ -101,11 +101,18 @@ print(f'CFG_BATCH_SIZE={batch_size}')
 print(f'CFG_TEMPERATURE={temperature}')
 print(f'CFG_TOP_P={top_p}')
 print(f'CFG_MAX_TOKENS={max_tokens}')
+generation_only = c.get('generation_only', False)
+
 print(f'CFG_RUN_NAME={shlex.quote(str(run_name))}')
+print(f'CFG_GENERATION_ONLY={str(generation_only).lower()}')
 ")"
 
 # CLI overrides take precedence over config
-GENERATE_ONLY=false
+if [[ "$CFG_GENERATION_ONLY" == "true" ]]; then
+    GENERATE_ONLY=true
+else
+    GENERATE_ONLY=false
+fi
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --generate-only) GENERATE_ONLY=true; shift ;;
