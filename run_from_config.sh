@@ -58,8 +58,10 @@ else
 fi
 if ! conda activate canitedit 2>/dev/null; then
     if ! conda activate SFT_env 2>/dev/null; then
-        echo "Error: neither 'canitedit' nor 'SFT_env' conda env is available" >&2
-        exit 1
+        if ! conda activate vllm_env 2>/dev/null; then
+            echo "Error: none of 'canitedit', 'SFT_env', or 'vllm_env' conda envs is available" >&2
+            exit 1
+        fi
     fi
 fi
 
@@ -89,7 +91,9 @@ comp_limit   = cie.get('completion_limit', 20)
 batch_size   = cie.get('batch_size', 100)
 temperature  = cie.get('temperature', c.get('temperature', 0.2))
 top_p        = cie.get('top_p', c.get('top_p', 0.95))
-max_tokens   = cie.get('max_tokens', c.get('max_tokens', 3072))
+# CanItEdit upstream uses a fixed 3K generation cap. Keep this hardcoded so
+# stale orchestrator/runtime YAML cannot accidentally request larger outputs.
+max_tokens   = 3072
 run_name     = cie.get('run_name', '')
 
 print(f'CFG_MODEL_ID={shlex.quote(str(model_id))}')
