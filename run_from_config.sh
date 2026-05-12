@@ -95,6 +95,9 @@ top_p        = cie.get('top_p', c.get('top_p', 0.95))
 # stale orchestrator/runtime YAML cannot accidentally request larger outputs.
 max_tokens   = 3072
 run_name     = cie.get('run_name', '')
+# previous_attempts is set by the orchestrator when resuming into an
+# existing run dir. We just forward it so summary.json can bump 'attempts'.
+previous_attempts = int(cie.get('previous_attempts', 0) or 0)
 
 print(f'CFG_MODEL_ID={shlex.quote(str(model_id))}')
 print(f'CFG_PORT={port}')
@@ -108,6 +111,7 @@ print(f'CFG_MAX_TOKENS={max_tokens}')
 generation_only = c.get('generation_only', False)
 
 print(f'CFG_RUN_NAME={shlex.quote(str(run_name))}')
+print(f'CFG_PREVIOUS_ATTEMPTS={previous_attempts}')
 print(f'CFG_GENERATION_ONLY={str(generation_only).lower()}')
 ")"
 
@@ -175,7 +179,7 @@ SUMMARY_FINALIZED=0
 write_summary_status() {
     local status="$1"
     local extra_args="${2:-}"
-    python - "$SUMMARY_PATH" "$status" "$CFG_RUN_NAME" "$OUTPUT_DIR" "$CONFIG_FILE" "$CFG_MODEL_NAME" "$MODEL" "$BASE_URL" "$DETACHED_LOG" "$extra_args" <<'PY'
+    python - "$SUMMARY_PATH" "$status" "$CFG_RUN_NAME" "$OUTPUT_DIR" "$CONFIG_FILE" "$CFG_MODEL_NAME" "$MODEL" "$BASE_URL" "$DETACHED_LOG" "$extra_args" "${CFG_PREVIOUS_ATTEMPTS:-0}" <<'PY'
 import errno, fcntl, json, os, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -191,6 +195,7 @@ from pathlib import Path
     api_base,
     detached_log,
     extra_json,
+    previous_attempts,
 ) = sys.argv[1:]
 
 summary_path = Path(summary_path)
@@ -226,6 +231,21 @@ with lock_path.open("a+", encoding="utf-8") as lock_handle:
     now = datetime.now(timezone.utc).isoformat()
     if status == "running_generation":
         data.setdefault("generation_started_at_utc", now)
+        # On a resume run, clear stale failure fields so the orchestrator
+        # does not misinterpret in-progress state as the prior failure
+        # carrying over. Tracking attempts already records that we've been
+        # here before.
+        for key in ("generation_failed_at_utc", "error"):
+            data.pop(key, None)
+        # Bump attempts exactly once per runner invocation. Orchestrator
+        # passes previous_attempts via CFG_PREVIOUS_ATTEMPTS so this stays
+        # idempotent under repeated write_summary_status calls within the
+        # same process.
+        try:
+            data["attempts"] = int(previous_attempts) + 1
+        except (TypeError, ValueError):
+            data["attempts"] = data.get("attempts", 0) + 1
+        data["last_resume_started_at_utc"] = now
     elif status == "generation_complete":
         data["generation_completed_at_utc"] = now
     elif status == "generation_failed":
