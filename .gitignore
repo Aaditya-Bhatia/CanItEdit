@@ -4,6 +4,6 @@ __pycache__/
 .vscode/
 hf_runs/
 
-# Keep generation outputs in runs/ committable for remote eval workflow.
-# Ignore only Docker-produced eval artifacts.
-runs/**/summary.json
+# Active working dirs — committed backups live under backups/ instead.
+# See backups/README.md for the procedure.
+runs/
