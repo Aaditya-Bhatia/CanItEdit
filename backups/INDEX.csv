@@ -100,3 +100,7 @@ starcoder2-7b-lora-dirty-canitedit-20260512T223528Z-slot1-821087404,CanItEdit,st
 starcoder2-7b-lora-unclean-canitedit-20260423T170705Z-slot1-616604981,CanItEdit,starcoder2-7b-lora-unclean,same_size,True,421,1096851,991396
 starcoder2-7b-lora-unclean74k-canitedit-20260415T204903Z-slot1-474283587,CanItEdit,starcoder2-7b-lora-unclean74k,different_size,True,421,1094203,991155
 test-model-canitedit-2026-04-09,CanItEdit,test-model,different_size,True,1,700,556
+qwen2.5-coder-3b-lora-clean-canitedit-20260515T193630Z-slot0-784376394,CanItEdit,qwen2.5-coder-3b-lora-clean,same_size,True,211,435708,417231
+qwen2.5-coder-3b-lora-dirty-canitedit-20260515T193618Z-slot1-644703852,CanItEdit,qwen2.5-coder-3b-lora-dirty,same_size,True,211,441599,422513
+qwen2.5-coder-3b-lora-dirty-ss-canitedit-20260515T194332Z-slot1-645151469,CanItEdit,qwen2.5-coder-3b-lora-dirty-ss,same_size,True,211,445960,432028
+qwen2.5-coder-3b-lora-unclean-ss-canitedit-20260515T195117Z-slot1-411997854,CanItEdit,qwen2.5-coder-3b-lora-unclean-ss,same_size,True,211,437390,418220

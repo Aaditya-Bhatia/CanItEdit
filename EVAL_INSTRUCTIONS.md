@@ -107,4 +107,27 @@ qwen2.5-3b-lora-dirty-canitedit-20260514T020244Z-slot1-247496836
 qwen2.5-coder-3b-instruct-lora-dirty-canitedit-20260514T020218Z-slot0-116823438
 qwen3-4b-base-lora-dirty-canitedit-20260514T022128Z-slot0-761479267
 starcoder2-3b-lora-dirty-canitedit-20260514T031600Z-slot1-913929142
+qwen2.5-coder-3b-lora-clean-canitedit-20260515T193630Z-slot0-784376394
+qwen2.5-coder-3b-lora-dirty-canitedit-20260515T193618Z-slot1-644703852
+qwen2.5-coder-3b-lora-dirty-ss-canitedit-20260515T194332Z-slot1-645151469
+qwen2.5-coder-3b-lora-unclean-ss-canitedit-20260515T195117Z-slot1-411997854
 ```
+
+### New ablation runs (2026-05-15)
+
+The 4 latest entries are Qwen2.5-Coder-3B variants (`clean`, `dirty`,
+`dirty-ss`, `unclean-ss`) from `run_new_ablations_3b.py`. Per the
+post-2026-05-14 strategy, these are committed as
+`backups/<run>.tar.gz`, not as loose dirs. Extract before running the
+eval worker, e.g.:
+
+```bash
+cd /workspace/CanItEdit
+tar -xzf backups/<run>.tar.gz -C runs/
+```
+
+A 5th planned variant (`qwen2.5-coder-3b-lora-unclean74k`) was still
+generating at commit time and will land in a follow-up commit.
+
+See `.claude/agents/cross-repo-backup-protocol.md` in `Master_VLLM`
+for the full cross-repo protocol.
