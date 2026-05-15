@@ -111,6 +111,7 @@ qwen2.5-coder-3b-lora-clean-canitedit-20260515T193630Z-slot0-784376394
 qwen2.5-coder-3b-lora-dirty-canitedit-20260515T193618Z-slot1-644703852
 qwen2.5-coder-3b-lora-dirty-ss-canitedit-20260515T194332Z-slot1-645151469
 qwen2.5-coder-3b-lora-unclean-ss-canitedit-20260515T195117Z-slot1-411997854
+qwen2.5-coder-3b-lora-unclean74k-canitedit-20260515T194349Z-slot0-674824881
 ```
 
 ### New ablation runs (2026-05-15)
